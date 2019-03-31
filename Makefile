@@ -1,6 +1,6 @@
 LIB=libsock.so
 
-CFLAGS   = -I./ -fPIC -shared -rdynamic
+CFLAGS   = -I./ -fPIC -shared -rdynamic -std=gnu99
 LIBFLAGS = 
 
 OBJS = sock.o

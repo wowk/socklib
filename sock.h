@@ -41,6 +41,7 @@ extern int connect_socket(struct sock_t* sock, const char* ip, int port);
 
 extern int send_socket(struct sock_t* sock, int flags, size_t iov_cnt, ...);
 extern int recv_socket(struct sock_t* sock, int flags, size_t iov_cnt, ...);
+extern int printf_socket(struct sock_t* sock, const char* fmt, ...);
 
 extern void close_socket(struct sock_t* s);
 
