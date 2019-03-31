@@ -189,6 +189,18 @@ int recv_socket(struct sock_t* sock, int flags, size_t iov_cnt, ...)
     return recvmsg(sock->fd, &msghdr, flags);
 }
 
+int printf_socket(struct sock_t* sock, const char* fmt, ...)
+{
+    va_list vl;
+    char buffer[4096] = "";
+    
+    va_start(vl, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, vl);
+    va_end(vl);
+
+    return send_socket(sock, 0, 1, buffer, strlen(buffer));
+}
+
 void close_socket(struct sock_t* s)
 {
     if(s){
