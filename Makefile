@@ -7,7 +7,8 @@ OBJS = sock.o
 
 all: $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) -o $(LIB) $(LIBFLAGS)
+	$(CC) test.c -o test -L./ -lsock
 
 clean:
-	rm -rf *.o *.so
+	rm -rf *.o *.so test
 

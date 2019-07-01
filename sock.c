@@ -68,9 +68,7 @@ ssize_t socket_addr(union sock_addr_u* sau, int af, int count, ...)
         if(count == 2){
             sau->sll.sll_ifindex = va_arg(vl, int);
             uint16_t proto = (uint16_t)va_arg(vl, int);
-            debug(1, "=========proto: 0x%.4x==========", proto);
             sau->sll.sll_protocol= htons(proto);
-            sau->sll.sll_halen   = va_arg(vl, int);
         }else if(count == 3){
             sau->sll.sll_ifindex = va_arg(vl, int);
             sau->sll.sll_protocol= htons(ETH_P_ARP);
@@ -89,7 +87,7 @@ ssize_t socket_addr(union sock_addr_u* sau, int af, int count, ...)
         goto return_error;
     }
 
-    return 0;
+    return socklen;
 
 return_error:
     return -errno;
@@ -263,3 +261,163 @@ void socket_close(struct sock_t* s)
         free(s);
     }
 }
+
+int socket_set_reuse_addr(struct sock_t* sock, int onoff)
+{
+    if(0 > setsockopt(sock->fd, SOL_SOCKET, SO_REUSEADDR, &onoff, sizeof(onoff))){
+        error(0, errno, "failed to do set reuse addr");
+        return -errno;
+    }
+
+    return 0;
+}
+
+int socket_set_reuse_port(struct sock_t* sock, int onoff)
+{
+    if(0 > setsockopt(sock->fd, SOL_SOCKET, SO_REUSEPORT, &onoff, sizeof(onoff))){
+        error(0, errno, "failed to do set reuse addr");
+        return -errno;
+    }
+
+    return 0;
+}
+
+int socket_bind_device(struct sock_t* sock, const char* ifname)
+{
+    if(0 > setsockopt(sock->fd, SOL_SOCKET, SO_BINDTODEVICE, ifname, strlen(ifname))){
+        error(0, errno, "failed to do set reuse addr");
+        return -errno;
+    }
+
+    return 0;
+}
+
+#include <linux/filter.h>
+
+/* use `tcpdump -dd` */
+int socket_attach_filter(struct sock_t* sock, struct sock_filter* filter, size_t filter_cnt)
+{
+    struct sock_fprog sfprog = {
+        .filter = filter,
+        .len    = filter_cnt,
+    };
+
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_ATTACH_FILTER, &sfprog, sizeof(sfprog));
+    if(ret < 0){
+        error(0, errno, "failed to attach filter");
+        return -errno;
+    }
+
+    return 0;
+}
+
+int socket_detach_filter(struct sock_t* sock)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_DETACH_FILTER, NULL, 0);
+
+    if(ret < 0){
+        error(0, errno, "failed to detach filter");
+    }
+
+    return 0;
+}
+
+int socket_set_dont_route(struct sock_t* sock, int onoff)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_DONTROUTE, &onoff, sizeof(onoff));
+
+    if(ret < 0){
+        error(0, errno, "failed to set DONT_ROUTE");
+    }
+
+    return 0;
+}
+
+int socket_set_boardcast(struct sock_t* sock, int onoff)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &onoff, sizeof(onoff));
+
+    if(ret < 0){
+        error(0, errno, "failed to set BROADCAST");
+    }
+ 
+    return 0;
+}
+
+int socket_set_promisc(struct sock_t* sock, int onoff)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_BROADCAST, &onoff, sizeof(onoff));
+
+    if(ret < 0){
+        error(0, errno, "failed to set DONT_ROUTE");
+    }
+ 
+    return 0;
+}
+
+int socket_set_keep_alive(struct sock_t* sock, int onoff)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_KEEPALIVE, &onoff, sizeof(onoff));
+
+    if(ret < 0){
+        error(0, errno, "failed to set KEEPALIVE");
+    }
+ 
+    return 0;
+}
+
+int socket_set_lock_filter(struct sock_t* sock, int onoff)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_LOCK_FILTER, &onoff, sizeof(onoff));
+
+    if(ret < 0){
+        error(0, errno, "failed to set LOCK_FILTER");
+    }
+ 
+    return 0;
+}
+
+int socket_set_mark(struct sock_t* sock, int mark)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_MARK, &mark, sizeof(mark));
+
+    if(ret < 0){
+        error(0, errno, "failed to set MARK");
+    }
+
+    return 0;
+}
+
+int socket_set_priority(struct sock_t* sock, int priority)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_PRIORITY, &priority, sizeof(priority));
+
+    if(ret < 0){
+        error(0, errno, "failed to set PRIORITY");
+    }
+
+    return 0;
+}
+
+int socket_set_recv_timeout(struct sock_t* sock, int timeout)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+
+    if(ret < 0){
+        error(0, errno, "failed to set RECV timeout");
+    }
+
+    return 0;
+}
+
+int socket_set_send_timeout(struct sock_t* sock, int timeout)
+{
+    int ret = setsockopt(sock->fd, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
+    if(ret < 0){
+        error(0, errno, "failed to set SEND timeout");
+    }
+ 
+    return 0;
+}
+
